@@ -895,7 +895,7 @@ function renderErrorTrace(id) {
         <div class="trace-arrow">
           <div class="trace-arrow-line"></div>
         </div>
-        <div style="padding:4px 22px 8px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);">
+        <div style="padding:4px 22px 8px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:#475569;">
           ↓ Would affect (if D-1058 approved with bad data)
         </div>
 
