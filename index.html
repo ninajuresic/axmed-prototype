@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axmed — Agent Review</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header id="site-header">
+    <div class="header-inner">
+      <a href="#/worklist" class="wordmark" id="home-link">
+        <span class="wm-primary">Axmed</span>
+        <span class="wm-sep">/</span>
+        <span class="wm-secondary">Agent Review</span>
+      </a>
+      <div class="header-right">
+        <span class="header-date">Aug 17, 2026</span>
+        <div class="header-user" title="Commercial Lead">CL</div>
+      </div>
+    </div>
+  </header>
+
+  <div id="toast-area"></div>
+
+  <main id="app-root">
+    <div class="loading-state">Loading decisions…</div>
+  </main>
+
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div id="modal-box" class="modal-box"></div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

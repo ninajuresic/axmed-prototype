@@ -1,0 +1,347 @@
+// Axmed Agent Review — Decision dataset
+// Source: agent-decisions.json (verbatim — do not add invented decisions)
+
+const DECISIONS = [
+  {
+    "id": "D-1031",
+    "timestamp": "2026-08-17T07:12:04Z",
+    "agent": "extraction-agent",
+    "action_type": "extract_quotation",
+    "status": "auto_approved",
+    "confidence": 0.97,
+    "summary": "Extracted 14 line items from Hetero Labs proforma PDF (ref HTL-PF-88214).",
+    "proposed_values": {
+      "supplier": "Hetero Labs Ltd",
+      "line_items": 14,
+      "currency": "USD",
+      "example_line": {
+        "product_name": "Tenofovir Disoproxil Fumarate 300mg tablets, 30s bottle",
+        "inn": "tenofovir disoproxil fumarate",
+        "price_per_pack": 4.85,
+        "price_per_unit": 0.1617,
+        "pack_size": 30
+      }
+    },
+    "evidence": [
+      { "source": "HTL-PF-88214.pdf", "locator": "page 1, table rows 3–16", "quality": "clean digital PDF" }
+    ],
+    "reasoning": "Well-formed table with explicit unit prices and a stated currency in the header. All 14 rows parsed without ambiguity; critic-agent found no disputes.",
+    "risk": "low",
+    "reversible": true,
+    "financial_exposure_usd": 0,
+    "downstream_effect": "Records written to quotation table, visible to sourcing-agent."
+  },
+  {
+    "id": "D-1034",
+    "timestamp": "2026-08-17T07:40:19Z",
+    "agent": "extraction-agent",
+    "action_type": "extract_quotation",
+    "status": "pending_review",
+    "confidence": 0.41,
+    "summary": "Read a photographed quotation sheet from Zhejiang Ruibang; three fields are uncertain and one price is unreadable.",
+    "proposed_values": {
+      "supplier": "Zhejiang Ruibang Pharmaceutical",
+      "product_name": "Amoxicillin + Clavulanic Acid 500/125mg tablets",
+      "inn": "amoxicillin; clavulanic acid",
+      "price_per_pack": 2.19,
+      "currency": "CNY",
+      "pack_size": null
+    },
+    "field_confidence": {
+      "product_name": 0.88,
+      "inn": 0.90,
+      "price_per_pack": 0.44,
+      "currency": 0.52,
+      "pack_size": 0.0
+    },
+    "evidence": [
+      { "source": "IMG_2291.jpg", "locator": "lower third of sheet, obscured by glare", "quality": "phone photo, skewed, glare across price column" }
+    ],
+    "reasoning": "OCR returned '2.19' but the adjacent character could be a currency symbol or a digit; glare removes the pack-size column entirely. Currency inferred from supplier country, not stated on the document.",
+    "risk": "medium",
+    "reversible": true,
+    "financial_exposure_usd": 0,
+    "downstream_effect": "Blocked. Nothing written until resolved.",
+    "agent_question": "Is the price 2.19 CNY per pack, and what is the pack size? I could not read either reliably."
+  },
+  {
+    "id": "D-1037",
+    "timestamp": "2026-08-17T08:03:55Z",
+    "agent": "extraction-agent",
+    "action_type": "reconcile_revised_figure",
+    "status": "pending_review",
+    "confidence": 0.63,
+    "summary": "A supplier email quotes one price early in the thread and a different one later; the agent picked the later figure.",
+    "proposed_values": {
+      "supplier": "Aurobindo Pharma",
+      "product_name": "Artemether/Lumefantrine 20/120mg dispersible tablets",
+      "price_per_pack": 0.62,
+      "superseded_value": 0.71,
+      "currency": "USD"
+    },
+    "evidence": [
+      { "source": "thread_aurobindo_2026-08-14.eml", "locator": "message 1, paragraph 2", "quote": "we can offer at USD 0.71 per pack of 6" },
+      { "source": "thread_aurobindo_2026-08-14.eml", "locator": "message 3, paragraph 1", "quote": "apologies — please disregard my earlier figure, the correct price is 0.62 for the 6-tablet pack, valid to end September" }
+    ],
+    "reasoning": "Later message explicitly corrects the earlier one. Chose 0.62. Confidence held down because the correction is conversational, not a formal revised quotation, and the validity window is stated only in prose.",
+    "risk": "medium",
+    "reversible": true,
+    "financial_exposure_usd": 0,
+    "downstream_effect": "If wrong, this offer is ranked ~13% cheaper than it should be and may win an award.",
+    "agent_question": "Should a price correction stated only in an email body be treated as binding, or do we require a revised proforma?"
+  },
+  {
+    "id": "D-1042",
+    "timestamp": "2026-08-17T08:31:12Z",
+    "agent": "normalisation-agent",
+    "action_type": "normalise_unit_price",
+    "status": "executed",
+    "confidence": 0.93,
+    "summary": "Converted a pack price to a per-unit price using an assumed pack size. The assumption was wrong.",
+    "proposed_values": {
+      "supplier": "Cipla Ltd",
+      "product_name": "Salbutamol 100mcg inhaler, 200 doses",
+      "price_per_pack": 3.4,
+      "assumed_pack_size": 1,
+      "price_per_unit": 3.4,
+      "currency": "USD"
+    },
+    "evidence": [
+      { "source": "CIP-Q-4471.pdf", "locator": "line 7", "quality": "clean digital PDF" }
+    ],
+    "reasoning": "Treated 'inhaler' as the sellable unit and set pack size to 1. The document later states a carton of 10 inhalers as the minimum sellable unit, which the agent did not read.",
+    "risk": "high",
+    "reversible": true,
+    "financial_exposure_usd": 0,
+    "downstream_effect": "This product now appears 10x more expensive than competing offers and was silently dropped from the shortlist in D-1058. No human was asked.",
+    "known_error": true,
+    "how_it_surfaced": "A commercial lead noticed the supplier missing from a shortlist two days later."
+  },
+  {
+    "id": "D-1044",
+    "timestamp": "2026-08-17T08:47:30Z",
+    "agent": "catalogue-agent",
+    "action_type": "match_to_catalogue",
+    "status": "pending_review",
+    "confidence": 0.58,
+    "summary": "Cannot decide whether a supplier presentation is the same catalogue product as an existing entry, or a new one.",
+    "proposed_values": {
+      "incoming_presentation": "Paracetamol 125mg/5ml oral suspension, 60ml bottle",
+      "candidate_match": "AX-PROD-00912 — Paracetamol 120mg/5ml suspension, 60ml",
+      "match_type": "near_match",
+      "alternative": "create new catalogue product"
+    },
+    "field_confidence": { "inn": 0.99, "strength": 0.31, "form": 0.95, "pack_size": 0.97 },
+    "evidence": [
+      { "source": "medipharm_catalogue_export.json", "locator": "$.products[47]", "quality": "clean JSON, non-standard field names" }
+    ],
+    "reasoning": "125mg/5ml and 120mg/5ml are clinically near-equivalent and some suppliers round, but they are not the same registered presentation. Merging them would make two different products look like competing offers on one line.",
+    "risk": "medium",
+    "reversible": false,
+    "financial_exposure_usd": 0,
+    "downstream_effect": "A wrong merge pollutes the master catalogue and every future price comparison for this product. Unmerging requires manual data surgery.",
+    "agent_question": "Same product or new catalogue entry?"
+  },
+  {
+    "id": "D-1049",
+    "timestamp": "2026-08-17T09:15:02Z",
+    "agent": "compliance-agent",
+    "action_type": "flag_expired_document",
+    "status": "executed",
+    "confidence": 0.99,
+    "summary": "Suspended a supplier's offers because their GMP certificate expired 11 days ago.",
+    "proposed_values": {
+      "supplier": "Meridian Generics FZE",
+      "document": "GMP certificate (WHO PQ)",
+      "expiry_date": "2026-08-06",
+      "offers_suspended": 22
+    },
+    "evidence": [
+      { "source": "supplier_registry", "locator": "supplier_id SUP-3391, doc GMP-2024-118", "quality": "structured record" }
+    ],
+    "reasoning": "Hard rule: offers from suppliers without a valid GMP certificate cannot be shown to buyers. Acted without asking because the rule is unambiguous and the alternative — showing non-compliant supply — is unacceptable.",
+    "risk": "low",
+    "reversible": true,
+    "financial_exposure_usd": 0,
+    "downstream_effect": "22 offers hidden from buyers. Supplier not yet notified. Two of these offers were the cheapest available for their molecule.",
+    "agent_question": null
+  },
+  {
+    "id": "D-1053",
+    "timestamp": "2026-08-17T09:44:41Z",
+    "agent": "sourcing-agent",
+    "action_type": "flag_price_outlier",
+    "status": "pending_review",
+    "confidence": 0.72,
+    "summary": "An offer is 68% below the benchmark for its molecule. Either a genuine win or a data error.",
+    "proposed_values": {
+      "supplier": "Lifecare Formulations Pvt Ltd",
+      "product_name": "Metformin HCl 500mg tablets, 100s",
+      "price_per_unit": 0.0031,
+      "benchmark_price_per_unit": 0.0097,
+      "delta_pct": -68.0
+    },
+    "evidence": [
+      { "source": "LFC-QUOTE-2211.pdf", "locator": "line 2", "quality": "clean digital PDF" },
+      { "source": "benchmark_index", "locator": "molecule metformin_500mg, 12-month median across 9 suppliers" }
+    ],
+    "reasoning": "The extraction is clean and the critic-agent confirmed it against the source. The price is simply far outside the distribution. Possible causes: an unusually large committed volume, a currency error upstream, or a supplier data-entry mistake.",
+    "risk": "high",
+    "reversible": true,
+    "financial_exposure_usd": 412000,
+    "downstream_effect": "If accepted and it turns out to be an error, we may have aggregated demand against a price the supplier will not honour.",
+    "agent_question": "Accept as genuine, or hold and ask the supplier to confirm before this enters an aggregation round?"
+  },
+  {
+    "id": "D-1056",
+    "timestamp": "2026-08-17T10:02:18Z",
+    "agent": "comms-agent",
+    "action_type": "send_clarification_email",
+    "status": "executed",
+    "confidence": 0.88,
+    "summary": "Emailed a supplier asking for a missing pack size — without a human reading the draft.",
+    "proposed_values": {
+      "recipient": "exports@zhejiang-ruibang.example",
+      "subject": "Clarification on quotation ref ZR-2026-0814",
+      "body_excerpt": "Dear team, we could not read the pack size on the sheet you shared. Could you confirm the number of tablets per pack and the price basis?",
+      "sent": true
+    },
+    "evidence": [
+      { "source": "D-1034", "locator": "unresolved fields: pack_size, currency" }
+    ],
+    "reasoning": "Auto-send rule permits outbound clarification requests that ask only for missing factual data and make no commercial commitment.",
+    "risk": "medium",
+    "reversible": false,
+    "financial_exposure_usd": 0,
+    "downstream_effect": "Message is with the supplier. It cannot be recalled. Tone and framing were never reviewed by a human, and this is a first-contact supplier.",
+    "agent_question": null
+  },
+  {
+    "id": "D-1058",
+    "timestamp": "2026-08-17T10:29:07Z",
+    "agent": "sourcing-agent",
+    "action_type": "recommend_award_split",
+    "status": "pending_review",
+    "confidence": 0.69,
+    "summary": "Recommends splitting a 1.4M-unit salbutamol award across two suppliers, excluding a third.",
+    "proposed_values": {
+      "demand_units": 1400000,
+      "recommended_split": [
+        { "supplier": "Sun Pharmaceutical", "share_pct": 65, "price_per_unit": 0.29, "lead_time_days": 45 },
+        { "supplier": "Zydus Lifesciences", "share_pct": 35, "price_per_unit": 0.34, "lead_time_days": 28 }
+      ],
+      "excluded": [
+        { "supplier": "Cipla Ltd", "reason": "price_per_unit 3.40 — far above alternatives", "note": "derived from D-1042" }
+      ],
+      "estimated_saving_vs_benchmark_usd": 96400
+    },
+    "evidence": [
+      { "source": "quotation table", "locator": "molecule salbutamol_100mcg, 6 live offers" },
+      { "source": "D-1042", "locator": "unit price normalisation for Cipla Ltd" }
+    ],
+    "reasoning": "Split favours the cheapest supplier while holding a faster-delivering second source to cover the first 30 days of demand. Cipla excluded on price.",
+    "risk": "high",
+    "reversible": true,
+    "financial_exposure_usd": 448000,
+    "downstream_effect": "Becomes the recommendation shown to the buyer. The exclusion inherits the error in D-1042 — a reviewer looking only at this decision would have no reason to doubt it.",
+    "agent_question": "Approve this split, or adjust shares?"
+  },
+  {
+    "id": "D-1061",
+    "timestamp": "2026-08-17T10:51:33Z",
+    "agent": "compliance-agent",
+    "action_type": "redact_pii",
+    "status": "auto_approved",
+    "confidence": 0.94,
+    "summary": "Redacted a personal phone number and a named individual from an ingested WhatsApp negotiation thread.",
+    "proposed_values": {
+      "source": "whatsapp_export_kenya_moh.txt",
+      "redactions": [
+        { "type": "phone_number", "count": 2 },
+        { "type": "person_name", "count": 3 }
+      ],
+      "retained": "commercial terms, volumes, prices"
+    },
+    "evidence": [
+      { "source": "whatsapp_export_kenya_moh.txt", "locator": "lines 14, 22, 39–41" }
+    ],
+    "reasoning": "PII policy requires redaction before the thread is stored. Commercial content retained.",
+    "risk": "low",
+    "reversible": false,
+    "financial_exposure_usd": 0,
+    "downstream_effect": "Original text overwritten in storage. One redacted name was part of a supplier's registered company name, so a reviewer reading the thread later will see a gap where an entity used to be.",
+    "agent_question": null
+  },
+  {
+    "id": "D-1064",
+    "timestamp": "2026-08-17T11:20:56Z",
+    "agent": "sourcing-agent",
+    "action_type": "flag_lead_time_conflict",
+    "status": "pending_review",
+    "confidence": 0.81,
+    "summary": "The recommended supplier's lead time misses the buyer's stated delivery deadline by 12 days.",
+    "proposed_values": {
+      "buyer": "Ministry of Health — Country A (tender ref MOH-A-2026-114)",
+      "required_delivery_by": "2026-09-30",
+      "supplier": "Sun Pharmaceutical",
+      "quoted_lead_time_days": 45,
+      "projected_delivery": "2026-10-12",
+      "options_generated": ["shift volume to the faster second source", "request expedited production", "ask the buyer to accept partial delivery"]
+    },
+    "evidence": [
+      { "source": "MOH-A-2026-114.pdf", "locator": "section 4, delivery schedule" },
+      { "source": "SUN-PF-9902.pdf", "locator": "terms block" }
+    ],
+    "reasoning": "Deadline is contractual, lead time is quoted. The agent will not choose between commercial options that change what a buyer receives.",
+    "risk": "high",
+    "reversible": true,
+    "financial_exposure_usd": 291000,
+    "downstream_effect": "Nothing moves until a human picks an option.",
+    "agent_question": "Which option should I pursue?"
+  },
+  {
+    "id": "D-1067",
+    "timestamp": "2026-08-17T11:48:14Z",
+    "agent": "extraction-agent",
+    "action_type": "extract_quotation",
+    "status": "failed",
+    "confidence": 0.0,
+    "summary": "Could not read a supplier document at all.",
+    "proposed_values": null,
+    "evidence": [
+      { "source": "scan_0043.pdf", "locator": "whole document", "quality": "scan of a fax of a printout; text layer absent, OCR output unintelligible" }
+    ],
+    "reasoning": "OCR produced no coherent tokens. No partial extraction offered rather than guessing.",
+    "risk": "low",
+    "reversible": true,
+    "financial_exposure_usd": 0,
+    "downstream_effect": "Document sits unprocessed. Nobody is currently assigned to it.",
+    "agent_question": "This needs manual entry, or a better copy from the supplier."
+  },
+  {
+    "id": "D-1070",
+    "timestamp": "2026-08-17T12:15:47Z",
+    "agent": "critic-agent",
+    "action_type": "dispute_extraction",
+    "status": "pending_review",
+    "confidence": 0.77,
+    "summary": "The critic agent disagrees with the extraction agent about a currency. The two agents are in open conflict.",
+    "proposed_values": {
+      "field": "currency",
+      "extraction_agent_value": "USD",
+      "critic_agent_value": "EUR",
+      "supplier": "Farmaco Iberica SL",
+      "price_per_pack": 12.4
+    },
+    "evidence": [
+      { "source": "FI-QT-3308.pdf", "locator": "header states '$' next to total", "quote": "TOTAL $ 12.40" },
+      { "source": "FI-QT-3308.pdf", "locator": "footer terms", "quote": "todos los precios en euros, EXW Barcelona" }
+    ],
+    "reasoning": "The document contradicts itself: a dollar glyph in the table, a Spanish-language footer stating euros. Critic-agent weights the explicit written statement over the glyph; extraction-agent weights the glyph adjacent to the figure.",
+    "risk": "medium",
+    "reversible": true,
+    "financial_exposure_usd": 38000,
+    "downstream_effect": "A ~9% price error either way, which would propagate into any comparison including this supplier.",
+    "agent_question": "Which agent is right?"
+  }
+];
