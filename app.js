@@ -977,12 +977,23 @@ function toggleEvidence(id) {
 
 function expandAQ(decisionId) {
   state.aqExpanded.add(decisionId);
-  // Re-render just the AQ block
   const d = DECISIONS.find(x => x.id === decisionId);
   const block = document.getElementById(`aq-block-${decisionId}`);
   if (block && d) {
     block.outerHTML = renderAgentQuestion(d);
   }
+  // Scroll the detail panel to the input field
+  const panel = document.getElementById('detail-panel');
+  const target = document.getElementById(`aq-block-${decisionId}`) || document.getElementById(`aq-input-${decisionId}`);
+  if (panel && target) {
+    const offset = target.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop - 16;
+    panel.scrollTo({ top: offset, behavior: 'smooth' });
+  }
+  // Focus the textarea after scroll settles
+  setTimeout(function() {
+    const input = document.getElementById(`aq-input-${decisionId}`);
+    if (input) input.focus();
+  }, 350);
 }
 
 function submitAgentAnswer(decisionId) {
@@ -1291,7 +1302,7 @@ function setQueueFilter(filter) {
 
 function renderDetailPlaceholder(count, exposure) {
   return '<div class="detail-placeholder">' +
-    '<div class="detail-placeholder-icon">&#9744;</div>' +
+    '<div class="detail-placeholder-icon" style="font-size:28px;opacity:0.25;">&#8592;</div>' +
     '<div class="detail-placeholder-title">Select a decision to review</div>' +
     '<div class="detail-placeholder-sub">' + count + ' decision' + (count !== 1 ? 's' : '') +
       ' waiting &middot; ' + fmtMoney(exposure) + ' total exposure</div>' +
