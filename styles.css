@@ -1516,19 +1516,30 @@ button { font-family: var(--font); cursor: pointer; }
   border-left: 3px solid transparent;
   margin-bottom: 4px;
   background: var(--surface);
-  transition: background 0.1s, border-color 0.1s;
+  transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
 }
 
-.queue-item:hover {
+.queue-item:not(.queue-item-selected) .qi-summary {
+  color: var(--text-muted); /* unselected items recede slightly */
+}
+
+.queue-item:hover:not(.queue-item-selected) {
   border-color: var(--blue-border);
   border-left-color: var(--blue);
   background: var(--blue-light);
 }
 
 .queue-item-selected {
-  background: var(--blue-light) !important;
-  border-color: var(--blue-border) !important;
-  border-left-color: var(--blue) !important;
+  background: var(--surface) !important;       /* white = same as right-panel cards */
+  border-color: var(--border-mid) !important;
+  border-left: 3px solid var(--blue) !important;
+  /* inset right bar mirrors the left accent, "points" toward the detail panel */
+  box-shadow: inset -3px 0 0 var(--blue), 0 2px 6px rgba(37,99,235,0.10);
+}
+
+.queue-item-selected .qi-summary {
+  color: var(--text); /* full contrast on selected */
+  font-weight: 500;
 }
 
 .qi-risk-high   { border-left-color: var(--high); }
