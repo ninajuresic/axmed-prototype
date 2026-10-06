@@ -1,4 +1,4 @@
-# Axmed: Agent Review
+# Agent Review Tool
 
 A review queue where a Commercial Lead checks, corrects and approves what AI agents decided in a pharmaceutical procurement workflow.
 
